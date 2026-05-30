@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "research": "Condição da Via",
+    "fields": [
+      {
+        "id": "condicao_via",
+        "label": "Condição da Via",
+        "type": "select",
+        "options": ["Bom", "Neutro", "Ruim"],
+        "placeholder": "Selecione a condição"
+      },
+      {
+        "id": "observacoes",
+        "label": "Observações",
+        "type": "textarea",
+        "placeholder": "Descreva em detalhes..."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "research": "Validação de Medição",
+    "fields": [
+      {
+        "id": "valor_medido",
+        "label": "Valor Medido",
+        "type": "number"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "research": "Levantamento em Campo",
+    "fields": [
+      
+    ]
+  },
+  {
+    "id": 4,
+    "research": "Análise Viária",
+    "fields": [
+      
+    ]
+  }
+]

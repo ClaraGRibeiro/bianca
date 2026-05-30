@@ -47,6 +47,7 @@ export default function RecordsScreen({ navigation }: Props) {
 
     // await Sharing.shareAsync(fileUri);
   };
+
   const uriToBase64 = async (uri: string) => {
     const response = await fetch(uri);
     const blob = await response.blob();
@@ -58,18 +59,20 @@ export default function RecordsScreen({ navigation }: Props) {
     });
   };
   const exportPDF = async () => {
-    if (data.length === 0) {
-      Alert.alert("Aviso", "Não há dados para exportar");
-      return;
-    }
+    try {
+      if (data.length === 0) {
+        Alert.alert("Aviso", "Não há dados para exportar");
+        return;
+      }
 
-    const dataWithImages = await Promise.all(
-      data.map(async (item) => ({
-        ...item,
-        fotoBase64: item.foto ? await uriToBase64(item.foto) : null,
-      }))
-    );
-    const html = `
+      const dataWithImages = await Promise.all(
+        data.map(async (item) => ({
+          ...item,
+          fotoBase64: item.foto ? await uriToBase64(item.foto) : null,
+        }))
+      );
+
+      const html = `
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -159,6 +162,11 @@ export default function RecordsScreen({ navigation }: Props) {
     }
 
    footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
   background: #133a44;
   color: white;
   padding: 16px 28px;
@@ -195,8 +203,8 @@ export default function RecordsScreen({ navigation }: Props) {
 
   <main>
     ${dataWithImages
-        .map(
-          (item) => `
+          .map(
+            (item) => `
         <section class="record">
 
           <div class="grid">
@@ -211,54 +219,77 @@ export default function RecordsScreen({ navigation }: Props) {
               <p><strong>Latitude:</strong> ${item.latitude ?? "-"}</p>
               <p><strong>Longitude:</strong> ${item.longitude ?? "-"}</p>
 ${Object.entries(item.respostas || {})
-              .map(([key, value]) => {
-                const formattedValue =
-                  value === null || value === undefined || value === ""
-                    ? "Não informado"
-                    : Array.isArray(value)
-                      ? value.join(", ")
-                      : String(value);
+                .map(([key, value]) => {
+                  const formattedValue =
+                    value === null || value === undefined || value === ""
+                      ? "Não informado"
+                      : Array.isArray(value)
+                        ? value.join(", ")
+                        : String(value);
 
-                return `
+                  return `
       <p>
         <strong>${key.replace(/_/g, " ")}:</strong> ${formattedValue}
       </p>
     `;
-              })
-              .join("")}       
+                })
+                .join("")}       
                    </div>
 
             <div>
               ${item.fotoBase64
-              ? `<img class="photo" src="${item.fotoBase64}" />`
-              : `<div class="muted">Sem foto</div>`
-            }
+                ? `<img class="photo" src="${item.fotoBase64}" />`
+                : `<div class="muted">Sem foto</div>`
+              }
             </div>
 
           </div>
 
         </section>
       `
-        )
-        .join("")}
+          )
+          .join("")}
   </main>
 
   <footer>
+  <div>
     Observatório de Transporte de Minas Gerais — Relatório offline gerado automaticamente
-  </footer>
+  </div>
+
+  <div class="footer-logos">
+    <img src="https://fundacaocefetminas.org.br/wp-content/themes/ctsmod_fundacaocefetminas/images/cefet.png" />
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMLnE6zZ3XVjExeI30YPPhomHowdtvJeS4KA&s" />
+    <img src="https://www.unifal-mg.edu.br/prppg/wp-content/uploads/sites/84/2019/08/logotipo-fapemig.png" />
+  </div>
+</footer>
 
 </body>
 </html>
 `;
+      const { uri } = await Print.printToFileAsync({
+        html,
+      });
 
-    const { uri } = await Print.printToFileAsync({ html });
-    await Sharing.shareAsync(uri);
+      const available = await Sharing.isAvailableAsync();
+
+      if (!available) {
+        Alert.alert("Erro", "Compartilhamento não disponível");
+        return;
+      }
+
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro", JSON.stringify(error));
+    }
   };
+
   const clearAll = async () => {
     if (data.length === 0) {
       Alert.alert("Aviso", "Não há dados para excluir");
       return;
     }
+
     const saved = await AsyncStorage.getItem("collections");
     const previousData = saved ? JSON.parse(saved) : [];
 

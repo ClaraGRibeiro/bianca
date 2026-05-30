@@ -649,10 +649,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
-
-// exportar zip
-// exportar pdf relatório (cabeçalho e rodapé)
-// apagar
-// microfone
-// imagem com dados

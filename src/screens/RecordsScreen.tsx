@@ -1,19 +1,19 @@
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useState } from "react";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Print from "expo-print";
+import { useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
+import JSZip from "jszip";
+import React, { useCallback, useState } from "react";
 import {
+  Alert,
   FlatList, StyleSheet, Text,
   TouchableOpacity,
   View
 } from "react-native";
-
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
-import * as Print from "expo-print";
-import { useRouter } from "expo-router";
-import * as Sharing from "expo-sharing";
-import { useCallback } from "react";
-import { Alert } from "react-native";
 import { RootStackParamList } from "../routes/types";
 import { colors } from "../styles/colors";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -21,31 +21,129 @@ type Props = {
   navigation: NavigationProp;
 };
 export default function RecordsScreen({ navigation }: Props) {
-  const exportCSV = async () => {
-    Alert.alert("Aviso", "CSV exportado");
+  const photoPathName = (latitude: any, longitude: any, date: any, hour: any) => {
+    return `${String(latitude ?? "0").replace(".", "").replace("-", "_")}_${String(longitude ?? "0").replace(".", "").replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`.replace(/\//g, "").replace(/:/g, "").replace(/\s/g, "")}`
+  }
+  const exportZIP = async () => {
+    try {
+      const fotos = data.filter((item) => item.foto);
 
-    // if (data.length === 0) {
-    //   Alert.alert("Aviso", "Não há dados para exportar");
-    //   return;
-    // }
+      if (fotos.length === 0) {
+        Alert.alert("Aviso", "Não há imagens para exportar");
+        return;
+      }
 
-    // const header = "id,tipoColeta,local,data,hora\n";
+      const zip = new JSZip();
+      const camposRespostas = Array.from(
+        new Set(
+          data.flatMap((item) =>
+            Object.keys(item.respostas || {})
+          )
+        )
+      );
 
-    // const rows = data
-    //   .map((item) =>
-    //     `${item.id},"${item.tipoColeta}","${item.local}","${item.data}","${item.hora}"`
-    //   )
-    //   .join("\n");
+      const header = [
+        "id",
+        "pesquisador",
+        "tipoColeta",
+        "local",
+        "data",
+        "hora",
+        "latitude",
+        "longitude",
+        "imagem",
+        ...camposRespostas
+      ];
 
-    // const csv = header + rows;
+      const rows = data.map((item) => [
+        item.id ?? "",
+        item.pesquisador ?? "",
+        item.tipoColeta ?? "",
+        item.local ?? "",
+        item.data ?? "",
+        item.hora ?? "",
+        item.latitude ?? "",
+        item.longitude ?? "",
+        photoPathName(item.latitude, item.longitude, item.data, item.hora),
+        ...camposRespostas.map((campo) => {
+          const valor = item.respostas?.[campo];
 
-    // const fileUri = FileSystem.documentDirectory + "coletas.csv";
+          if (Array.isArray(valor)) {
+            return valor.join(" | ");
+          }
 
-    // await FileSystem.writeAsStringAsync(fileUri, csv, {
-    //   encoding: FileSystem.EncodingType.UTF8,
-    // });
+          return valor ?? "";
+        }),
+      ]);
 
-    // await Sharing.shareAsync(fileUri);
+      const csvContent = [
+        header.join(","),
+        ...rows.map((row) =>
+          row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+        ),
+      ].join("\n");
+
+      zip.file("registros.csv", csvContent);
+
+      zip.file("registros.csv", csvContent);
+      for (const item of fotos) {
+        const extensao =
+          item.foto.split(".").pop()?.split("?")[0] || "jpg";
+
+        const nomeArquivo =
+          photoPathName(item.latitude, item.longitude, item.data, item.hora) +
+          `.${extensao}`;
+
+        const base64 = await FileSystem.readAsStringAsync(
+          item.foto,
+          {
+            encoding: FileSystem.EncodingType.Base64,
+          }
+        );
+
+        const imagensFolder = zip.folder("imagens");
+
+        imagensFolder?.file(nomeArquivo, base64, {
+          base64: true,
+        });
+      }
+
+      const zipBase64 = await zip.generateAsync({
+        type: "base64",
+      });
+
+      const zipPath =
+        FileSystem.cacheDirectory + "coletas.zip";
+
+      const zipInfo = await FileSystem.getInfoAsync(zipPath);
+
+      if (zipInfo.exists) {
+        await FileSystem.deleteAsync(zipPath, {
+          idempotent: true,
+        });
+      }
+
+      await FileSystem.writeAsStringAsync(
+        zipPath,
+        zipBase64,
+        {
+          encoding: FileSystem.EncodingType.Base64,
+        }
+      );
+
+      await Sharing.shareAsync(zipPath, {
+        mimeType: "application/zip",
+        dialogTitle: "Exportar imagens",
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        "Erro",
+        error instanceof Error
+          ? error.message
+          : "Falha ao gerar ZIP"
+      );
+    }
   };
 
   const uriToBase64 = async (uri: string) => {
@@ -71,6 +169,7 @@ export default function RecordsScreen({ navigation }: Props) {
           fotoBase64: item.foto ? await uriToBase64(item.foto) : null,
         }))
       );
+      console.log(dataWithImages)
 
       const html = `
 <html lang="pt-BR">
@@ -187,6 +286,28 @@ export default function RecordsScreen({ navigation }: Props) {
   height: 32px;
   width: auto;
 }
+
+.photo-wrapper {
+  width: 60%;
+  margin-left: auto;
+}
+
+.photo {
+  width: 100%;
+  display: block;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid #d7dfdc;
+  border-bottom: none;
+}
+
+.photo-label {
+  background: #000;
+  color: #fff;
+  font-size: 11px;
+  padding: 8px;
+  border-radius: 0 0 8px 8px;
+  line-height: 1.4;
+}
   </style>
 </head>
 
@@ -210,7 +331,7 @@ export default function RecordsScreen({ navigation }: Props) {
           <div class="grid">
 
             <div>
-              <h2>${item.categoria || item.tipoColeta}</h2>
+              <h2>${item.tipoColeta}</h2>
 
               <p><strong>Pesquisador:</strong> ${item.pesquisador}</p>
               <p><strong>Tipo:</strong> ${item.tipoColeta}</p>
@@ -238,7 +359,17 @@ ${Object.entries(item.respostas || {})
 
             <div>
               ${item.fotoBase64
-                ? `<img class="photo" src="${item.fotoBase64}" />`
+                ? `
+                  <div class="photo-wrapper">
+                    <img class="photo" src="${item.fotoBase64}" />
+
+                    <div class="photo-label">
+                      <div>Latitude: ${item.latitude ?? "-"}</div>
+                      <div>Longitude: ${item.longitude ?? "-"}</div>
+                      <div>Data/Hora: ${item.data} ${item.hora}</div>
+                    </div>
+                  </div>
+                  `
                 : `<div class="muted">Sem foto</div>`
               }
             </div>
@@ -257,9 +388,9 @@ ${Object.entries(item.respostas || {})
   </div>
 
   <div class="footer-logos">
-    <img src="https://fundacaocefetminas.org.br/wp-content/themes/ctsmod_fundacaocefetminas/images/cefet.png" />
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMLnE6zZ3XVjExeI30YPPhomHowdtvJeS4KA&s" />
-    <img src="https://www.unifal-mg.edu.br/prppg/wp-content/uploads/sites/84/2019/08/logotipo-fapemig.png" />
+    <img src="https://i.imgur.com/dJyKSJE.png" />
+    <img src="https://i.imgur.com/P1k1tU4.png" />
+    <img src="https://i.imgur.com/UDJEYIw.png" />
   </div>
 </footer>
 
@@ -351,9 +482,9 @@ ${Object.entries(item.respostas || {})
         <Text style={styles.title}>Coletas realizadas</Text>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.button} onPress={exportCSV}>
+        <TouchableOpacity style={styles.button} onPress={exportZIP}>
           <Ionicons name="download-outline" size={18} color="#fff" />
-          <Text style={styles.buttonText}>CSV</Text>
+          <Text style={styles.buttonText}>ZIP</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={exportPDF}>

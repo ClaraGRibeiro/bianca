@@ -30,7 +30,7 @@ type Pesquisa = {
   fields: Field[];
 };
 export default function RegisterScreen() {
-  
+
   const checkProfile = async () => {
     const name = await AsyncStorage.getItem("user_name");
     const preference = await AsyncStorage.getItem("user_preference");
@@ -54,15 +54,15 @@ export default function RegisterScreen() {
     return true;
   };
   useFocusEffect(
-  useCallback(() => {
-    const run = async () => {
-      const ok = await checkProfile();
-      if (!ok) return;
-    };
+    useCallback(() => {
+      const run = async () => {
+        const ok = await checkProfile();
+        if (!ok) return;
+      };
 
-    run();
-  }, [])
-);
+      run();
+    }, [])
+  );
   const loadDefaults = async () => {
     const savedName = await AsyncStorage.getItem("user_name");
     const savedPreference = await AsyncStorage.getItem("user_preference");
@@ -173,14 +173,15 @@ export default function RegisterScreen() {
         local,
         latitude,
         longitude,
-        respostas: formData,
+
         foto: photoUri,
+
+        timestamp: now.toISOString(),
+
+        respostas: formData,
+
         data: now.toLocaleDateString("pt-BR"),
-        hora: now.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+        hora: now.toLocaleTimeString("pt-BR"),
       };
 
       const saved = await AsyncStorage.getItem("collections");

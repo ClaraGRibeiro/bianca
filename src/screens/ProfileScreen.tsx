@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import { default as React, useEffect, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -46,94 +48,125 @@ export default function ProfileScreen() {
   };
 
   const saveProfile = async () => {
-    await AsyncStorage.setItem("user_name", name);
-    await AsyncStorage.setItem("user_preference", preference);
+    await AsyncStorage.setItem("user_name", name.trim());
+    await AsyncStorage.setItem("user_preference", preference.trim());
+
+    setSavedName(name);
+    setSavedPreference(preference);
 
     setSavedName(name);
     setSavedPreference(preference);
 
     Alert.alert("Sucesso", "Perfil salvo no dispositivo");
   };
+
+  const resetProfile = async () => {
+    await AsyncStorage.setItem("user_name", "");
+    await AsyncStorage.setItem("user_preference", "");
+
+    setName("");
+    setPreference("");
+
+    setSavedName("");
+    setSavedPreference("");
+
+    Alert.alert("Sucesso", "Perfil salvo no dispositivo");
+  };
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={26} color={colors.white} />
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Perfil</Text>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.avatar}>
-          <Ionicons name="person" size={70} color={colors.white} />
-        </View>
-        <Text style={styles.name}>{name !== "" ? name : "NOME A DEFINIR"}</Text>
-        <Text style={styles.role}>
-          {preference !== ""
-            ? `Preferência: ${preference}`
-            : "PREFERÊNCIA A DEFINIR"}
-        </Text>
-        <View style={styles.form}>
-          <Text style={styles.label}>Nome do pesquisador</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Digite seu nome"
-            placeholderTextColor="#777"
-            value={name}
-            onChangeText={setName}
-          />
-
-          <Text style={styles.label}>Preferência de coleta</Text>
-          <View style={styles.selectContainer}>
-            <Picker
-              selectedValue={preference}
-              onValueChange={(itemValue) => setPreference(itemValue)}
-              style={styles.select}
-              dropdownIconColor={colors.dark}
-            >
-              <Picker.Item
-                label="Selecione uma preferência"
-                value=""
-                color="#777"
-              />
-
-              {pesquisas.map((item: Pesquisa) => (
-                <Picker.Item
-                  key={item.id}
-                  label={item.research}
-                  value={item.research}
-                />
-              ))}
-            </Picker>
-          </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
           <TouchableOpacity
-            style={[
-              styles.button,
-              hasChanges && {
-                backgroundColor: colors.warning,
-              },
-            ]}
-            activeOpacity={0.85}
-            onPress={saveProfile}
+            style={styles.backButton}
+            onPress={() => router.back()}
           >
-            <Text style={styles.buttonText}>
-              {hasChanges
-                ? "Salvar alterações"
-                : "Configurações salvas"}
-            </Text>
-          </TouchableOpacity> 
+            <Ionicons name="arrow-back" size={26} color={colors.white} />
+          </TouchableOpacity>
+
+          <Text style={styles.title}>Perfil</Text>
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={styles.content}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={70} color={colors.white} />
+          </View>
+          <Text style={styles.name}>{name.trim() !== "" ? name : "NOME A DEFINIR"}</Text>
+          <Text style={styles.role}>
+            {preference !== ""
+              ? `Preferência: ${preference}`
+              : "PREFERÊNCIA A DEFINIR"}
+          </Text>
+          <View style={styles.form}>
+            <Text style={styles.label}>Nome do pesquisador</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Digite seu nome"
+              placeholderTextColor="#777"
+              value={name}
+              onChangeText={setName}
+            />
+
+            <Text style={styles.label}>Preferência de coleta</Text>
+            <View style={styles.selectContainer}>
+              <Picker
+                selectedValue={preference}
+                onValueChange={(itemValue) => setPreference(itemValue)}
+                style={styles.select}
+                dropdownIconColor={colors.dark}
+              >
+                <Picker.Item
+                  label="Selecione uma preferência"
+                  value=""
+                  color="#777"
+                />
+
+                {pesquisas.map((item: Pesquisa) => (
+                  <Picker.Item
+                    key={item.id}
+                    label={item.research}
+                    value={item.research}
+                  />
+                ))}
+              </Picker>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                hasChanges && {
+                  backgroundColor: colors.warning,
+                },
+              ]}
+              activeOpacity={0.85}
+              onPress={saveProfile}
+            >
+              <Text style={styles.buttonText} disabled={!hasChanges}>
+                {hasChanges
+                  ? "Salvar alterações"
+                  : "Configurações salvas"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.reset]}
+              activeOpacity={0.85}
+              onPress={resetProfile}
+            >
+              <Text style={styles.buttonText}>
+                Redefinir dados
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -238,6 +271,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,
+  },
+  reset: {
+    backgroundColor: colors.dark,
   },
 
   buttonText: {

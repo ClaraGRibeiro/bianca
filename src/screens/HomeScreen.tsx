@@ -1,4 +1,5 @@
-import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useCallback, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -13,6 +14,7 @@ import { colors } from "../styles/colors";
 
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+import { useFocusEffect } from "expo-router";
 import { RootStackParamList } from "../routes/types";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -22,20 +24,49 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
+  const [savedName, setSavedName] = useState<string | null>(null);
+  const [savedPreference, setSavedPreference] = useState<string | null>(null);
+  const loadProfile = async () => {
+    const storedName = await AsyncStorage.getItem("user_name");
+    const storedPreference = await AsyncStorage.getItem("user_preference");
+
+    setSavedName(storedName);
+    setSavedPreference(storedPreference);
+  };
+  useFocusEffect( useCallback(() => { loadProfile(); }, []) );
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.subtitle}>Coleta de dados em campo</Text>
-        <Text style={styles.title}>OTMG Coleta</Text>
+        <Text style={styles.subtitle}>OTMG / NUMOB</Text>
+        <Text style={styles.title}>BIANCA</Text>
 
         <Text style={styles.description}>
-          Aplicativo de coleta padronizada de dados offline.
+          Base Integrada de Análise, Navegação, Coleta e Armazenamento
         </Text>
       </View>
 
       <View style={styles.cardsContainer}>
         <TouchableOpacity
           style={styles.card}
+          onPress={() => navigation.navigate("Profile")}
+        >
+          <Ionicons
+            name="person-circle-outline"
+            size={42}
+            color={colors.primary}
+          />
+
+          <Text style={styles.cardTitle}>Perfil {(!savedName || !savedPreference) && "Incompleto"}</Text>
+
+          <Text style={styles.cardText}>Configurações do pesquisador.</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.card,
+            (!savedName || !savedPreference) && styles.cardDisabled,
+          ]}
+          disabled={!savedName || !savedPreference}
           onPress={() => navigation.navigate("Register")}
         >
           <Ionicons
@@ -43,13 +74,16 @@ export default function HomeScreen({ navigation }: Props) {
             size={42}
             color={colors.primary}
           />
-
           <Text style={styles.cardTitle}>Nova Coleta</Text>
-
-          <Text style={styles.cardText}>
-            Registrar uma nova coleta de campo.
-          </Text>
+          {(!savedName || !savedPreference) ?
+            <Text style={styles.cardText}>Para realizar uma coleta, complete seu perfil.</Text>
+            :
+            <Text style={styles.cardText}>
+              Registrar uma nova coleta de campo.
+            </Text>
+          }
         </TouchableOpacity>
+
 
         <TouchableOpacity
           style={styles.card}
@@ -62,21 +96,6 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.cardText}>
             Visualizar registros salvos offline.
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate("Profile")}
-        >
-          <Ionicons
-            name="person-circle-outline"
-            size={42}
-            color={colors.primary}
-          />
-
-          <Text style={styles.cardTitle}>Perfil</Text>
-
-          <Text style={styles.cardText}>Configurações do pesquisador.</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -141,5 +160,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     lineHeight: 22,
+  },
+  cardDisabled: {
+    opacity: 0.5,
   },
 });

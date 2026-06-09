@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RouteProp } from "@react-navigation/native";
+import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
 import React from "react";
 import {
   Alert,
@@ -54,7 +56,46 @@ export default function RecordDetailsScreen({ route }: Props) {
       },
     ]);
   };
+  
+  const photoPathName = (latitude: any, longitude: any, date: any, hour: any) => {
+    return `${String(latitude ?? "0").replace(".", "").replace("-", "_")}_${String(longitude ?? "0").replace(".", "").replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`.replace(/\//g, "").replace(/:/g, "").replace(/\s/g, "")}`
+  }
 
+  const downloadImage = async () => {
+    try {
+      if (!item.foto) {
+        Alert.alert("Aviso", "Esta coleta não possui imagem.");
+        return;
+      }
+
+      const extensao =
+        item.foto.split(".").pop()?.split("?")[0] || "jpg";
+
+      const nomeArquivo =
+        photoPathName(
+          item.latitude,
+          item.longitude,
+          item.data,
+          item.hora
+        ) + `.${extensao}`;
+
+      const destino =
+        FileSystem.cacheDirectory + nomeArquivo;
+
+      await FileSystem.copyAsync({
+        from: item.foto,
+        to: destino,
+      });
+
+      await Sharing.shareAsync(destino, {
+        mimeType: `image/${extensao}`,
+        dialogTitle: "Baixar imagem",
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro", "Não foi possível exportar a imagem.");
+    }
+  };
   return (
     <ScrollView style={styles.container}
       contentContainerStyle={styles.scrollContent}>
@@ -146,6 +187,18 @@ export default function RecordDetailsScreen({ route }: Props) {
             </View>
           </View>
         ))}
+
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={downloadImage}
+        >
+          <Ionicons
+            name="download-outline"
+            size={20}
+            color={colors.white}
+          />
+          <Text style={styles.deleteText}>Baixar imagem</Text>
+        </TouchableOpacity>
 
         {/* BOTÃO DELETE */}
         <TouchableOpacity
@@ -315,6 +368,16 @@ const styles = StyleSheet.create({
     borderColor: colors.gray,
   },
 
+  downloadButton: {
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: colors.medium,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+  },
   // DELETE
   deleteButton: {
     height: 56,

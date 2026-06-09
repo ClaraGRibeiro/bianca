@@ -7,7 +7,7 @@ import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  Alert, Image, ScrollView,
+  Alert, Image, KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -202,200 +202,205 @@ export default function RegisterScreen() {
   const [formData, setFormData] = useState<Record<string, string>>({});
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={26} color={colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nova Coleta</Text>
-      </View>
-
-      <View style={styles.form}>
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Informações da Coleta</Text>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Pesquisador</Text>
-            <Text style={styles.infoValue}>{pesquisador}</Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Tipo de coleta</Text>
-            <Text style={styles.infoValue}>{tipoColeta}</Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Localização</Text>
-            <Text style={styles.infoValue}>
-              {local || "Obtendo localização..."}
-            </Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.row}>
-            <View style={styles.half}>
-              <Text style={styles.infoLabel}>Latitude</Text>
-              <Text style={styles.coordinate}>
-                {latitude || "..."}
-              </Text>
-            </View>
-
-            <View style={styles.half}>
-              <Text style={styles.infoLabel}>Longitude</Text>
-              <Text style={styles.coordinate}>
-                {longitude || "..."}
-              </Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.sectionDivider}>
-          <View style={styles.sectionLine} />
-
-          <View style={styles.sectionBadge}>
-            <Ionicons
-              name="create-outline"
-              size={18}
-              color={colors.white}
-            />
-          </View>
-
-          <View style={styles.sectionLine} />
-        </View>
-
-        <Text style={styles.sectionTitle}>
-          Dados da Coleta
-        </Text>
-
-        <Text style={styles.sectionSubtitle}>
-          Preencha as informações observadas no local.
-        </Text>
-        {pesquisaAtual?.fields?.map((field) => {
-          if (!field?.type) return null;
-
-          return (
-            <View key={field.id} style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>{field.label}</Text>
-
-              {field.type === "select" && (
-                <View style={styles.selectContainer}>
-                  <Picker
-                    selectedValue={formData[field.id] || ""}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        [field.id]: value,
-                      }))
-                    }
-                    style={{
-                      color: colors.dark,
-                    }}
-                  >
-                    <Picker.Item
-                      label={field.placeholder}
-                      value=""
-                      color={colors.gray}
-                    />
-
-                    {field.options?.map((option) => (
-                      <Picker.Item
-                        key={option}
-                        label={option}
-                        value={option}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              )}
-
-              {field.type === "textarea" && (
-                <TextInput
-                  style={styles.fieldTextArea}
-                  multiline
-                  placeholder="Digite aqui..."
-                  placeholderTextColor={colors.primary}
-                  value={formData[field.id] || ""}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      [field.id]: text,
-                    }))
-                  }
-                />
-              )}
-
-              {(field.type === "text" || field.type === "number") && (
-                <TextInput
-                  style={styles.fieldInput}
-                  keyboardType={
-                    field.type === "number"
-                      ? "numeric"
-                      : "default"
-                  }
-                  value={formData[field.id] || ""}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      [field.id]: text,
-                    }))
-                  }
-                />
-              )}
-            </View>
-          );
-        })}
-
-        {photoUri === "" &&
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={pickImage}
+            style={styles.backButton}
+            onPress={() => router.back()}
           >
-            <Ionicons
-              name="camera-outline"
-              size={20}
-              color={colors.medium}
-            />
-            <Text style={styles.secondaryButtonText}>
-              Abrir câmera
-            </Text>
+            <Ionicons name="arrow-back" size={26} color={colors.white} />
           </TouchableOpacity>
-        }
+          <Text style={styles.headerTitle}>Nova Coleta</Text>
+        </View>
 
-        {photoUri !== "" && (
-          <View style={styles.photoContainer}>
-            <Image
-              source={{ uri: photoUri }}
-              style={styles.photo}
-              resizeMode="cover"
-            />
+        <View style={styles.form}>
+          <View style={styles.infoCard}>
+            <Text style={styles.cardTitle}>Informações da Coleta</Text>
 
-            <TouchableOpacity
-              style={styles.removePhotoButton}
-              onPress={() => setPhotoUri("")}
-            >
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Pesquisador</Text>
+              <Text style={styles.infoValue}>{pesquisador}</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Tipo de coleta</Text>
+              <Text style={styles.infoValue}>{tipoColeta}</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Localização</Text>
+              <Text style={styles.infoValue}>
+                {local || "Obtendo localização..."}
+              </Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.infoLabel}>Latitude</Text>
+                <Text style={styles.coordinate}>
+                  {latitude || "..."}
+                </Text>
+              </View>
+
+              <View style={styles.half}>
+                <Text style={styles.infoLabel}>Longitude</Text>
+                <Text style={styles.coordinate}>
+                  {longitude || "..."}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.sectionDivider}>
+            <View style={styles.sectionLine} />
+
+            <View style={styles.sectionBadge}>
               <Ionicons
-                name="trash-outline"
+                name="create-outline"
                 size={18}
                 color={colors.white}
               />
-            </TouchableOpacity>
+            </View>
+
+            <View style={styles.sectionLine} />
           </View>
-        )}
-        <TouchableOpacity style={styles.primaryButton} onPress={saveCollection}>
-          <Text style={styles.primaryButtonText}>Salvar coleta offline</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+          <Text style={styles.sectionTitle}>
+            Dados da Coleta
+          </Text>
+
+          <Text style={styles.sectionSubtitle}>
+            Preencha as informações observadas no local.
+          </Text>
+          {pesquisaAtual?.fields?.map((field) => {
+            if (!field?.type) return null;
+
+            return (
+              <View key={field.id} style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>{field.label}</Text>
+
+                {field.type === "select" && (
+                  <View style={styles.selectContainer}>
+                    <Picker
+                      selectedValue={formData[field.id] || ""}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [field.id]: value,
+                        }))
+                      }
+                      style={{
+                        color: colors.dark,
+                      }}
+                    >
+                      <Picker.Item
+                        label={field.placeholder}
+                        value=""
+                        color={colors.gray}
+                      />
+
+                      {field.options?.map((option) => (
+                        <Picker.Item
+                          key={option}
+                          label={option}
+                          value={option}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                )}
+
+                {field.type === "textarea" && (
+                  <TextInput
+                    style={styles.fieldTextArea}
+                    multiline
+                    placeholder="Digite aqui..."
+                    placeholderTextColor={colors.primary}
+                    value={formData[field.id] || ""}
+                    onChangeText={(text) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        [field.id]: text,
+                      }))
+                    }
+                  />
+                )}
+
+                {(field.type === "text" || field.type === "number") && (
+                  <TextInput
+                    style={styles.fieldInput}
+                    keyboardType={
+                      field.type === "number"
+                        ? "numeric"
+                        : "default"
+                    }
+                    value={formData[field.id] || ""}
+                    onChangeText={(text) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        [field.id]: text,
+                      }))
+                    }
+                  />
+                )}
+              </View>
+            );
+          })}
+
+          {photoUri === "" &&
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={pickImage}
+            >
+              <Ionicons
+                name="camera-outline"
+                size={20}
+                color={colors.medium}
+              />
+              <Text style={styles.secondaryButtonText}>
+                Abrir câmera
+              </Text>
+            </TouchableOpacity>
+          }
+
+          {photoUri !== "" && (
+            <View style={styles.photoContainer}>
+              <Image
+                source={{ uri: photoUri }}
+                style={styles.photo}
+                resizeMode="cover"
+              />
+
+              <TouchableOpacity
+                style={styles.removePhotoButton}
+                onPress={() => setPhotoUri("")}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+          <TouchableOpacity style={styles.primaryButton} onPress={saveCollection}>
+            <Text style={styles.primaryButtonText}>Salvar coleta offline</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

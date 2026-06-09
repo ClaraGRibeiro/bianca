@@ -21,6 +21,7 @@ type Props = {
   navigation: NavigationProp;
 };
 export default function RecordsScreen({ navigation }: Props) {
+  const [visibleItems, setVisibleItems] = useState(5);
   const photoPathName = (latitude: any, longitude: any, date: any, hour: any) => {
     return `${String(latitude ?? "0").replace(".", "").replace("-", "_")}_${String(longitude ?? "0").replace(".", "").replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`.replace(/\//g, "").replace(/:/g, "").replace(/\s/g, "")}`
   }
@@ -85,7 +86,6 @@ export default function RecordsScreen({ navigation }: Props) {
 
       zip.file("registros.csv", csvContent);
 
-      zip.file("registros.csv", csvContent);
       for (const item of fotos) {
         const extensao =
           item.foto.split(".").pop()?.split("?")[0] || "jpg";
@@ -169,7 +169,12 @@ export default function RecordsScreen({ navigation }: Props) {
           fotoBase64: item.foto ? await uriToBase64(item.foto) : null,
         }))
       );
-      console.log(dataWithImages)
+
+      const now = new Date();
+
+      const datePdf =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}` +
+        `_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}-${String(now.getSeconds()).padStart(2, "0")}`;
 
       const html = `
 <html lang="pt-BR">
@@ -244,70 +249,50 @@ export default function RecordsScreen({ navigation }: Props) {
       color: #133a44;
     }
 
-    .photo {
-      width: 60%;
-      height: auto;
-      border-radius: 8px;
-      border: 1px solid #d7dfdc;
-      background: #eef2f7;
-
-      display: block;
-      margin-left: auto;
-    }
-
     .muted {
       color: #64706d;
       font-size: 12px;
     }
 
-   footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
 
-  background: #133a44;
-  color: white;
-  padding: 16px 28px;
-  border-top: 4px solid #0aa689;
-  font-size: 12px;
+      background: #133a44;
+      color: white;
+      padding: 16px 28px;
+      border-top: 4px solid #0aa689;
+      font-size: 12px;
 
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-  .footer-logos {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+      .footer-logos {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
 
-.footer-logos img {
-  height: 32px;
-  width: auto;
-}
+    .footer-logos img {
+      height: 32px;
+      width: auto;
+    }
 
-.photo-wrapper {
-  width: 60%;
-  margin-left: auto;
-}
+    .photo-wrapper {
+      width: 55%;
+      margin-left: auto;
+    }
 
-.photo {
-  width: 100%;
-  display: block;
-  border-radius: 8px 8px 0 0;
-  border: 1px solid #d7dfdc;
-  border-bottom: none;
-}
-
-.photo-label {
-  background: #000;
-  color: #fff;
-  font-size: 11px;
-  padding: 8px;
-  border-radius: 0 0 8px 8px;
-  line-height: 1.4;
-}
+    .photo {
+      width: 100%;
+      display: block;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid #d7dfdc;
+      border-bottom: none;
+    }
   </style>
 </head>
 
@@ -315,9 +300,10 @@ export default function RecordsScreen({ navigation }: Props) {
 
   <header>
     <div class="brand">
-      <h1>Relatório OTMG Coleta</h1>
+      <h1>Relatório BIANCA</h1>
       <div class="subtitle">
-        Gerado em ${new Date().toISOString()} — Total: ${data.length} registros
+        Base Integrada de Análise, Navegação, Coleta e Armazenamento </br>
+        Gerado em ${datePdf} — Total: ${data.length} registros
       </div>
     </div>
   </header>
@@ -362,12 +348,6 @@ ${Object.entries(item.respostas || {})
                 ? `
                   <div class="photo-wrapper">
                     <img class="photo" src="${item.fotoBase64}" />
-
-                    <div class="photo-label">
-                      <div>Latitude: ${item.latitude ?? "-"}</div>
-                      <div>Longitude: ${item.longitude ?? "-"}</div>
-                      <div>Data/Hora: ${item.data} ${item.hora}</div>
-                    </div>
                   </div>
                   `
                 : `<div class="muted">Sem foto</div>`
@@ -401,6 +381,16 @@ ${Object.entries(item.respostas || {})
         html,
       });
 
+      const pdfPath =
+        FileSystem.cacheDirectory +
+        `relatorio-bianca-${datePdf
+          .replace(/[:.]/g, "-")}.pdf`;
+
+      await FileSystem.copyAsync({
+        from: uri,
+        to: pdfPath,
+      });
+
       const available = await Sharing.isAvailableAsync();
 
       if (!available) {
@@ -408,7 +398,10 @@ ${Object.entries(item.respostas || {})
         return;
       }
 
-      await Sharing.shareAsync(uri);
+      await Sharing.shareAsync(pdfPath, {
+        mimeType: "application/pdf",
+        dialogTitle: "Relatório BIANCA",
+      });
     } catch (error) {
       console.error(error);
       Alert.alert("Erro", JSON.stringify(error));
@@ -465,7 +458,44 @@ ${Object.entries(item.respostas || {})
   );
   const loadCollections = async () => {
     const collections = await AsyncStorage.getItem("collections");
+
     setData(collections ? JSON.parse(collections) : []);
+    setVisibleItems(5);
+  };
+
+  const [ascending, setAscending] = useState(false);
+
+  const sortDate = () => {
+    const sorted = [...data].sort((a, b) => {
+      const [diaA, mesA, anoA] = a.data.split("/");
+      const [horaA, minutoA] = a.hora.split(":");
+
+      const [diaB, mesB, anoB] = b.data.split("/");
+      const [horaB, minutoB] = b.hora.split(":");
+
+      const dateA = new Date(
+        Number(anoA),
+        Number(mesA) - 1,
+        Number(diaA),
+        Number(horaA),
+        Number(minutoA)
+      );
+
+      const dateB = new Date(
+        Number(anoB),
+        Number(mesB) - 1,
+        Number(diaB),
+        Number(horaB),
+        Number(minutoB)
+      );
+
+      return ascending
+        ? dateA.getTime() - dateB.getTime()
+        : dateB.getTime() - dateA.getTime();
+    });
+
+    setData(sorted);
+    setAscending(!ascending);
   };
 
   return (
@@ -482,24 +512,41 @@ ${Object.entries(item.respostas || {})
         <Text style={styles.title}>Coletas realizadas</Text>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.button} onPress={exportZIP}>
-          <Ionicons name="download-outline" size={18} color="#fff" />
-          <Text style={styles.buttonText}>ZIP</Text>
+        <TouchableOpacity style={styles.actionButton} onPress={exportZIP}>
+          <Ionicons name="download-outline" size={20} color="#fff" />
+          <Text style={styles.actionText}>ZIP</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={exportPDF}>
-          <Ionicons name="document-text-outline" size={18} color="#fff" />
-          <Text style={styles.buttonText}>PDF</Text>
+        <TouchableOpacity style={styles.actionButton} onPress={exportPDF}>
+          <Ionicons name="document-text-outline" size={20} color="#fff" />
+          <Text style={styles.actionText}>PDF</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={clearAll}>
-          <Ionicons name="trash-outline" size={18} color="#fff" />
-          <Text style={styles.buttonText}>Apagar tudo</Text>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={clearAll}
+        >
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+          <Text style={styles.actionText}>Apagar</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        style={styles.sortLink}
+        onPress={sortDate}
+      >
+        <Ionicons
+          name="swap-vertical-outline"
+          size={16}
+          color={colors.primary}
+        />
+        <Text style={styles.sortText}>
+          {ascending ? "Ordenado: mais antigos" : "Ordenado: mais recentes"}
+        </Text>
+      </TouchableOpacity>
       {/* LISTA */}
       <FlatList
-        data={data}
+        data={data.slice(0, visibleItems)}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -549,6 +596,18 @@ ${Object.entries(item.respostas || {})
             />
           </TouchableOpacity>
         )}
+        ListFooterComponent={
+          visibleItems < data.length ? (
+            <TouchableOpacity
+              style={styles.loadMoreButton}
+              onPress={() => setVisibleItems((prev) => prev + 5)}
+            >
+              <Text style={styles.loadMoreText}>
+                Carregar mais
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
     </View>
   );
@@ -556,30 +615,48 @@ ${Object.entries(item.respostas || {})
 const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 10,
     paddingHorizontal: 18,
-    marginTop: 12,
-    marginBottom: 10,
+    marginTop: 18,
+    marginBottom: 18,
   },
 
-  button: {
+  actionButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.medium,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 12,
     gap: 6,
   },
 
   deleteButton: {
-    backgroundColor: "#d9534f",
+    backgroundColor: colors.warning,
   },
 
-  buttonText: {
+  actionText: {
     color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  sortLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 18,
+    gap: 4,
+    paddingBottom: 18,
+  },
+
+  sortText: {
+    color: colors.primary,
+    fontSize: 16,
     fontWeight: "600",
   },
+
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -678,5 +755,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.medium,
     textAlign: "center",
+  },
+  
+  loadMoreButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  loadMoreText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });

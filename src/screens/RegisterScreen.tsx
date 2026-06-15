@@ -87,14 +87,6 @@ export default function RegisterScreen() {
   }, []);
   const captureLocation = async () => {
     try {
-      const { granted } =
-        await Location.requestForegroundPermissionsAsync();
-
-      if (!granted) {
-        Alert.alert("Permissão de localização negada");
-        return;
-      }
-
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -115,6 +107,8 @@ export default function RegisterScreen() {
             .filter(Boolean)
             .join(", ")
         );
+      } else {
+        setLocal("No Net");
       }
     } catch (error) {
       Alert.alert("Erro ao obter localização");

@@ -30,7 +30,7 @@ export default function RecordsScreen({ navigation }: Props) {
       const fotos = data.filter((item) => item.foto);
 
       if (fotos.length === 0) {
-        Alert.alert("Aviso", "Não há imagens para exportar");
+        Alert.alert("Aviso", "Não há dados para exportar");
         return;
       }
 
@@ -159,7 +159,7 @@ export default function RecordsScreen({ navigation }: Props) {
   const exportPDF = async () => {
     try {
       if (data.length === 0) {
-        Alert.alert("Aviso", "Não há dados para exportar");
+        Alert.alert("Aviso", "Não há dados para gerar relatório");
         return;
       }
 

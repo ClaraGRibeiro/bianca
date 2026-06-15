@@ -1,11 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback, useState } from "react";
+import * as Linking from "expo-linking";
+import * as Location from "expo-location";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -26,14 +28,28 @@ type Props = {
 export default function HomeScreen({ navigation }: Props) {
   const [savedName, setSavedName] = useState<string | null>(null);
   const [savedPreference, setSavedPreference] = useState<string | null>(null);
+  const [granted, setGranted] = useState(false);
+
+  useEffect(() => {
+    checkLocationPermission();
+  }, []);
+
+  const checkLocationPermission = async () => {
+    const { granted } =
+      await Location.getForegroundPermissionsAsync();
+    setGranted(granted);
+  };
   const loadProfile = async () => {
     const storedName = await AsyncStorage.getItem("user_name");
     const storedPreference = await AsyncStorage.getItem("user_preference");
+    const { granted } =
+      await Location.requestForegroundPermissionsAsync();
 
+    setGranted(granted);
     setSavedName(storedName);
     setSavedPreference(storedPreference);
   };
-  useFocusEffect( useCallback(() => { loadProfile(); }, []) );
+  useFocusEffect(useCallback(() => { loadProfile(); }, []));
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -61,12 +77,44 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.cardText}>Configurações do pesquisador.</Text>
         </TouchableOpacity>
 
+        {!granted &&
+          <TouchableOpacity
+            style={styles.card}
+            onPress={async () => {
+              const permission =
+                await Location.getForegroundPermissionsAsync();
+
+              if (!permission.granted) {
+                Linking.openSettings()
+                return;
+              }
+
+              const { granted } =
+                await Location.requestForegroundPermissionsAsync();
+
+              setGranted(granted);
+            }}
+          >
+            <Ionicons
+              name="compass-outline"
+              size={42}
+              color={colors.primary}
+            />
+
+            <Text style={styles.cardTitle}>GPS Negado</Text>
+
+            <Text style={styles.cardText}>
+              Necessário para buscar a localização das coletas.
+            </Text>
+          </TouchableOpacity>
+        }
+
         <TouchableOpacity
           style={[
             styles.card,
-            (!savedName || !savedPreference) && styles.cardDisabled,
+            (!savedName || !savedPreference || !granted) && styles.cardDisabled,
           ]}
-          disabled={!savedName || !savedPreference}
+          disabled={!savedName || !savedPreference || !granted}
           onPress={() => navigation.navigate("Register")}
         >
           <Ionicons
@@ -78,12 +126,14 @@ export default function HomeScreen({ navigation }: Props) {
           {(!savedName || !savedPreference) ?
             <Text style={styles.cardText}>Para realizar uma coleta, complete seu perfil.</Text>
             :
-            <Text style={styles.cardText}>
-              Registrar uma nova coleta de campo.
-            </Text>
+            !granted ?
+              <Text style={styles.cardText}>Para realizar uma coleta, permita o uso do GPS.</Text>
+              :
+              <Text style={styles.cardText}>
+                Registrar uma nova coleta de campo.
+              </Text>
           }
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={styles.card}
@@ -98,7 +148,7 @@ export default function HomeScreen({ navigation }: Props) {
           </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </ScrollView >
   );
 }
 

@@ -66,7 +66,8 @@ export default function HomeScreen({ navigation }: Props) {
   };
   useFocusEffect(useCallback(() => { loadProfile(); }, []));
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}
+      contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <Text style={styles.subtitle}>OTMG / NUMOB</Text>
         <Text style={styles.title}>BIANCA</Text>
@@ -209,6 +210,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollContent: {
+    paddingBottom: 40,
+  },
   header: {
     backgroundColor: colors.dark,
     padding: 24,
@@ -240,7 +244,6 @@ const styles = StyleSheet.create({
 
   cardsContainer: {
     padding: 18,
-    paddingBottom: 40,
     gap: 16,
   },
 

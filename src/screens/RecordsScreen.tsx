@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingHorizontal: 18,
     gap: 4,
-    paddingBottom: 18,
+    paddingBottom: 2,
   },
 
   sortText: {
@@ -721,6 +721,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    paddingBottom: 40,
   },
 
   header: {
@@ -747,7 +748,6 @@ const styles = StyleSheet.create({
 
   listContent: {
     padding: 18,
-    paddingBottom: 40,
   },
 
   card: {

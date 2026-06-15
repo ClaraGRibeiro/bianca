@@ -29,6 +29,7 @@ type Pesquisa = {
   research: string;
   fields: Field[];
 };
+
 export default function RegisterScreen() {
 
   const checkProfile = async () => {
@@ -286,6 +287,7 @@ export default function RegisterScreen() {
                 {field.type === "select" && (
                   <View style={styles.selectContainer}>
                     <Picker
+                      dropdownIconColor={colors.medium}
                       selectedValue={formData[field.id] || ""}
                       onValueChange={(value) =>
                         setFormData((prev) => ({
@@ -550,7 +552,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.gray,
   },
-
   sectionBadge: {
     width: 42,
     height: 42,
@@ -560,7 +561,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 14,
   },
-
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
@@ -570,7 +570,6 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 22,
   },
-
   fieldLabel: {
     fontSize: 14,
     fontWeight: "700",
@@ -580,7 +579,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
   },
-
   fieldInput: {
     backgroundColor: colors.white,
     borderRadius: 12,
@@ -614,7 +612,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     fontSize: 14,
   },
-
   fieldCard: {
     backgroundColor: colors.white,
     borderRadius: 16,
@@ -624,10 +621,9 @@ const styles = StyleSheet.create({
     borderColor: colors.gray,
   },
   photoContainer: {
-    marginBottom: 20,
     position: "relative",
+    paddingBottom: 10,
   },
-
   photo: {
     width: "100%",
     height: 220,
@@ -635,7 +631,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray,
   },
-
   removePhotoButton: {
     position: "absolute",
     top: 10,

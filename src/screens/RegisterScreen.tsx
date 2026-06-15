@@ -86,6 +86,7 @@ export default function RegisterScreen() {
     captureLocation();
   }, []);
   const captureLocation = async () => {
+    setLocal("Obtendo local...")
     try {
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
@@ -93,7 +94,6 @@ export default function RegisterScreen() {
 
       setLatitude(location.coords.latitude.toString());
       setLongitude(location.coords.longitude.toString());
-
       const address = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -107,11 +107,9 @@ export default function RegisterScreen() {
             .filter(Boolean)
             .join(", ")
         );
-      } else {
-        setLocal("No Net");
       }
     } catch (error) {
-      Alert.alert("Erro ao obter localização");
+      setLocal("Sem Localização")
     }
   };
   const pickImage = async () => {
@@ -365,6 +363,7 @@ export default function RegisterScreen() {
               />
               <Text style={styles.secondaryButtonText}>
                 Abrir câmera
+                {/* NEGADO */}
               </Text>
             </TouchableOpacity>
           }

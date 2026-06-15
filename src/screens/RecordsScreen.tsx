@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as FileSystem from "expo-file-system/legacy";
+import * as Location from "expo-location";
 import * as Print from "expo-print";
 import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
@@ -21,6 +22,64 @@ type Props = {
   navigation: NavigationProp;
 };
 export default function RecordsScreen({ navigation }: Props) {
+  const updateMissingLocations = async (collections: any[]) => {
+    let updated = false;
+
+    const newCollections = await Promise.all(
+      collections.map(async (item) => {
+        if (
+          item.local !== "Sem Localização" ||
+          !item.latitude ||
+          !item.longitude
+        ) {
+          return item;
+        }
+
+        try {
+          const address = await Location.reverseGeocodeAsync({
+            latitude: Number(item.latitude),
+            longitude: Number(item.longitude),
+          });
+
+          if (address.length > 0) {
+            const addr = address[0];
+
+            updated = true;
+
+            return {
+              ...item,
+              local: [
+                addr.name,
+                addr.street,
+                addr.streetNumber,
+                addr.district,
+                addr.subregion,
+                addr.city,
+                addr.region,
+                addr.postalCode,
+                addr.country,
+              ]
+                .filter(Boolean)
+                .join(", "),
+            };
+          }
+        } catch {
+          // continua como está
+        }
+
+        return item;
+      })
+    );
+
+    if (updated) {
+      await AsyncStorage.setItem(
+        "collections",
+        JSON.stringify(newCollections)
+      );
+    }
+
+    return newCollections;
+  };
   const [visibleItems, setVisibleItems] = useState(5);
   const photoPathName = (latitude: any, longitude: any, date: any, hour: any) => {
     return `${String(latitude ?? "0").replace(".", "").replace("-", "_")}_${String(longitude ?? "0").replace(".", "").replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`.replace(/\//g, "").replace(/:/g, "").replace(/\s/g, "")}`
@@ -457,9 +516,11 @@ ${Object.entries(item.respostas || {})
     }, [])
   );
   const loadCollections = async () => {
-    const collections = await AsyncStorage.getItem("collections");
-
-    setData(collections ? JSON.parse(collections) : []);
+    const saved = await AsyncStorage.getItem("collections");
+    const collections = saved ? JSON.parse(saved) : [];
+    const updatedCollections =
+      await updateMissingLocations(collections);
+    setData(updatedCollections);
     setVisibleItems(5);
   };
 
@@ -756,7 +817,7 @@ const styles = StyleSheet.create({
     color: colors.medium,
     textAlign: "center",
   },
-  
+
   loadMoreButton: {
     backgroundColor: colors.primary,
     paddingVertical: 14,

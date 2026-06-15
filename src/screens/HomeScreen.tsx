@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Linking from "expo-linking";
 import * as Location from "expo-location";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  AppState,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,9 +13,9 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { colors } from "../styles/colors";
-
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as ImagePicker from "expo-image-picker";
+import { colors } from "../styles/colors";
 
 import { useFocusEffect } from "expo-router";
 import { RootStackParamList } from "../routes/types";
@@ -28,24 +29,38 @@ type Props = {
 export default function HomeScreen({ navigation }: Props) {
   const [savedName, setSavedName] = useState<string | null>(null);
   const [savedPreference, setSavedPreference] = useState<string | null>(null);
-  const [granted, setGranted] = useState(false);
+  const [gps, setGps] = useState(false);
+  const [camera, setCamera] = useState(false);
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      async (state) => {
+        if (state === "active") {
+          await loadProfile();
+        }
+      }
+    );
 
+    return () => subscription.remove();
+  }, []);
   useEffect(() => {
     checkLocationPermission();
+    checkCameraPermission();
   }, []);
+  const checkCameraPermission = async () => {
+    const { granted } =
+      await ImagePicker.getCameraPermissionsAsync();
 
+    setCamera(granted);
+  };
   const checkLocationPermission = async () => {
     const { granted } =
       await Location.getForegroundPermissionsAsync();
-    setGranted(granted);
+    setGps(granted);
   };
   const loadProfile = async () => {
     const storedName = await AsyncStorage.getItem("user_name");
     const storedPreference = await AsyncStorage.getItem("user_preference");
-    const { granted } =
-      await Location.requestForegroundPermissionsAsync();
-
-    setGranted(granted);
     setSavedName(storedName);
     setSavedPreference(storedPreference);
   };
@@ -62,22 +77,36 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.cardsContainer}>
+
         <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate("Profile")}
+          style={[
+            styles.card,
+            (!savedName || !savedPreference || !gps || !camera) && styles.cardDisabled,
+          ]}
+          disabled={!savedName || !savedPreference || !gps || !camera}
+          onPress={() => navigation.navigate("Register")}
         >
           <Ionicons
-            name="person-circle-outline"
+            name="add-circle-outline"
             size={42}
             color={colors.primary}
           />
-
-          <Text style={styles.cardTitle}>Perfil {(!savedName || !savedPreference) && "Incompleto"}</Text>
-
-          <Text style={styles.cardText}>Configurações do pesquisador.</Text>
+          <Text style={styles.cardTitle}>Nova Coleta</Text>
+          {(!savedName || !savedPreference) ?
+            <Text style={styles.cardText}>Para realizar uma coleta, complete seu perfil.</Text>
+            :
+            !gps ?
+              <Text style={styles.cardText}>Para realizar uma coleta, permita o uso do GPS.</Text>
+              :
+              !camera ?
+                <Text style={styles.cardText}>Para realizar uma coleta, permita o uso da câmera.</Text>
+                :
+                <Text style={styles.cardText}>
+                  Registrar uma nova coleta de campo.
+                </Text>
+          }
         </TouchableOpacity>
-
-        {!granted &&
+        {!gps &&
           <TouchableOpacity
             style={styles.card}
             onPress={async () => {
@@ -92,7 +121,7 @@ export default function HomeScreen({ navigation }: Props) {
               const { granted } =
                 await Location.requestForegroundPermissionsAsync();
 
-              setGranted(granted);
+              setGps(granted);
             }}
           >
             <Ionicons
@@ -101,7 +130,7 @@ export default function HomeScreen({ navigation }: Props) {
               color={colors.primary}
             />
 
-            <Text style={styles.cardTitle}>GPS Negado</Text>
+            <Text style={styles.cardTitle}>Acesso ao GPS negado</Text>
 
             <Text style={styles.cardText}>
               Necessário para buscar a localização das coletas.
@@ -109,31 +138,39 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         }
 
-        <TouchableOpacity
-          style={[
-            styles.card,
-            (!savedName || !savedPreference || !granted) && styles.cardDisabled,
-          ]}
-          disabled={!savedName || !savedPreference || !granted}
-          onPress={() => navigation.navigate("Register")}
-        >
-          <Ionicons
-            name="add-circle-outline"
-            size={42}
-            color={colors.primary}
-          />
-          <Text style={styles.cardTitle}>Nova Coleta</Text>
-          {(!savedName || !savedPreference) ?
-            <Text style={styles.cardText}>Para realizar uma coleta, complete seu perfil.</Text>
-            :
-            !granted ?
-              <Text style={styles.cardText}>Para realizar uma coleta, permita o uso do GPS.</Text>
-              :
-              <Text style={styles.cardText}>
-                Registrar uma nova coleta de campo.
-              </Text>
-          }
-        </TouchableOpacity>
+        {!camera &&
+          <TouchableOpacity
+            style={styles.card}
+            onPress={async () => {
+              const permission =
+                await ImagePicker.getCameraPermissionsAsync();
+
+              if (!permission.granted) {
+                Linking.openSettings();
+                return;
+              }
+
+              const { granted } =
+                await ImagePicker.requestCameraPermissionsAsync();
+
+              setCamera(granted);
+            }}
+          >
+            <Ionicons
+              name="camera-outline"
+              size={42}
+              color={colors.primary}
+            />
+
+            <Text style={styles.cardTitle}>
+              Acesso à câmera negado
+            </Text>
+
+            <Text style={styles.cardText}>
+              Necessário para capturar imagens durante as coletas.
+            </Text>
+          </TouchableOpacity>
+        }
 
         <TouchableOpacity
           style={styles.card}
@@ -146,6 +183,21 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.cardText}>
             Visualizar registros salvos offline.
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Profile")}
+        >
+          <Ionicons
+            name="person-circle-outline"
+            size={42}
+            color={colors.primary}
+          />
+
+          <Text style={styles.cardTitle}>Perfil {(!savedName || !savedPreference) && "Incompleto"}</Text>
+
+          <Text style={styles.cardText}>Configurações do pesquisador.</Text>
         </TouchableOpacity>
       </View>
     </ScrollView >
@@ -188,6 +240,7 @@ const styles = StyleSheet.create({
 
   cardsContainer: {
     padding: 18,
+    paddingBottom: 40,
     gap: 16,
   },
 

@@ -31,6 +31,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [savedPreference, setSavedPreference] = useState<string | null>(null);
   const [gps, setGps] = useState(false);
   const [camera, setCamera] = useState(false);
+  const [collections, setcollections] = useState(0);
   useEffect(() => {
     const subscription = AppState.addEventListener(
       "change",
@@ -43,9 +44,14 @@ export default function HomeScreen({ navigation }: Props) {
 
     return () => subscription.remove();
   }, []);
+  const collectionsQtd = async () => {
+    const collection = await AsyncStorage.getItem("collections");
+    setcollections(collection ? JSON.parse(collection).length : 0);
+  }
   useEffect(() => {
     checkLocationPermission();
     checkCameraPermission();
+    collectionsQtd()
   }, []);
   const checkCameraPermission = async () => {
     const { granted } =
@@ -179,7 +185,7 @@ export default function HomeScreen({ navigation }: Props) {
         >
           <Ionicons name="documents-outline" size={42} color={colors.primary} />
 
-          <Text style={styles.cardTitle}>Coletas</Text>
+          <Text style={styles.cardTitle}>Coletas {collections > 0 ? `[${collections}]` : ""}</Text>
 
           <Text style={styles.cardText}>
             Visualizar registros salvos offline.

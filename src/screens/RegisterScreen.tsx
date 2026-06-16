@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   },
   photo: {
     width: "100%",
-    height: 220,
+    height: 500,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.gray,

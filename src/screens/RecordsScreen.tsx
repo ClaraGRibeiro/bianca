@@ -11,7 +11,7 @@ import JSZip from "jszip";
 import React, { useCallback, useState } from "react";
 import {
   Alert,
-  FlatList, StyleSheet, Text,
+  FlatList, Image, StyleSheet, Text,
   TouchableOpacity,
   View
 } from "react-native";
@@ -570,7 +570,7 @@ ${Object.entries(item.respostas || {})
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Coletas realizadas</Text>
+        <Text style={styles.title}>Coletas realizadas {data.length > 0 ? `[${data.length}]` : ""}</Text>
       </View>
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={exportZIP}>
@@ -602,7 +602,7 @@ ${Object.entries(item.respostas || {})
           color={colors.primary}
         />
         <Text style={styles.sortText}>
-          {ascending ? "Ordenado: mais antigos" : "Ordenado: mais recentes"}
+          {ascending ? "Ordenado: mais recentes" : "Ordenado: mais antigos"}
         </Text>
       </TouchableOpacity>
       {/* LISTA */}
@@ -629,10 +629,10 @@ ${Object.entries(item.respostas || {})
             activeOpacity={0.85}
           >
             <View style={styles.iconBox}>
-              <Ionicons
-                name="document-text-outline"
-                size={26}
-                color={colors.primary}
+              <Image
+                source={{ uri: item.foto }}
+                style={styles.thumbnail}
+                resizeMode="cover"
               />
             </View>
 
@@ -766,13 +766,18 @@ const styles = StyleSheet.create({
   },
 
   iconBox: {
-    width: 52,
-    height: 52,
+    width: 70,
+    height: 90,
     borderRadius: 14,
     backgroundColor: "#EAF7F4",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
+  },
+  thumbnail: {
+    width: 80,
+    height: 100,
+    borderRadius: 14,
   },
 
   cardContent: {

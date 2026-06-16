@@ -104,7 +104,6 @@ export default function RecordDetailsScreen({ route }: Props) {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={26} color={colors.white} />
         </TouchableOpacity>
-
         <Text style={styles.headerTitle}>Detalhes da Coleta</Text>
       </View>
 
@@ -362,7 +361,7 @@ const styles = StyleSheet.create({
 
   photo: {
     width: "100%",
-    height: 220,
+    height: 500,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.gray,

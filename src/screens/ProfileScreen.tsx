@@ -4,7 +4,6 @@ import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import { default as React, useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,7 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import pesquisas from "../data/tipos_de_pesquisa.json";
 import { colors } from "../styles/colors";
@@ -56,8 +55,6 @@ export default function ProfileScreen() {
 
     setSavedName(name);
     setSavedPreference(preference);
-
-    Alert.alert("Sucesso", "Perfil salvo no dispositivo");
   };
 
   const resetProfile = async () => {
@@ -69,8 +66,6 @@ export default function ProfileScreen() {
 
     setSavedName("");
     setSavedPreference("");
-
-    Alert.alert("Sucesso", "Perfil salvo no dispositivo");
   };
 
   return (

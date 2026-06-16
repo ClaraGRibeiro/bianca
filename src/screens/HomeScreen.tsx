@@ -48,10 +48,14 @@ export default function HomeScreen({ navigation }: Props) {
     const collection = await AsyncStorage.getItem("collections");
     setcollections(collection ? JSON.parse(collection).length : 0);
   }
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+      collectionsQtd()
+    }, []));
   useEffect(() => {
     checkLocationPermission();
     checkCameraPermission();
-    collectionsQtd()
   }, []);
   const checkCameraPermission = async () => {
     const { granted } =
@@ -70,7 +74,6 @@ export default function HomeScreen({ navigation }: Props) {
     setSavedName(storedName);
     setSavedPreference(storedPreference);
   };
-  useFocusEffect(useCallback(() => { loadProfile(); }, []));
   return (
     <ScrollView style={styles.container}
       contentContainerStyle={styles.scrollContent}>
@@ -185,7 +188,8 @@ export default function HomeScreen({ navigation }: Props) {
         >
           <Ionicons name="documents-outline" size={42} color={colors.primary} />
 
-          <Text style={styles.cardTitle}>Coletas {collections > 0 ? `[${collections}]` : ""}</Text>
+          <Text style={styles.cardTitle}>Coletas {collections > 0 ? `(${collections})` : ""}</Text>
+          {/* não atualiza o valor */}
 
           <Text style={styles.cardText}>
             Visualizar registros salvos offline.

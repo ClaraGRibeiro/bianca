@@ -1,11 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
-import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert, Image, KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet,
@@ -31,39 +30,6 @@ type Pesquisa = {
 };
 
 export default function RegisterScreen() {
-
-  const checkProfile = async () => {
-    const name = await AsyncStorage.getItem("user_name");
-    const preference = await AsyncStorage.getItem("user_preference");
-
-    if (!name || !preference) {
-      Alert.alert(
-        "Perfil incompleto",
-        "Você precisa configurar seu nome e tipo de coleta antes de registrar uma coleta.",
-        [
-          {
-            text: "Ir para configuração",
-            onPress: () => navigation.navigate("Register")
-
-          },
-        ]
-      );
-
-      return false;
-    }
-
-    return true;
-  };
-  useFocusEffect(
-    useCallback(() => {
-      const run = async () => {
-        const ok = await checkProfile();
-        if (!ok) return;
-      };
-
-      run();
-    }, [])
-  );
   const loadDefaults = async () => {
     const savedName = await AsyncStorage.getItem("user_name");
     const savedPreference = await AsyncStorage.getItem("user_preference");
@@ -184,8 +150,8 @@ export default function RegisterScreen() {
 
       await AsyncStorage.setItem("collections", JSON.stringify(list));
 
-      Alert.alert("Sucesso", "Coleta salva offline");
       router.back();
+      // quando volta aqui, na tela principal não recarrega a quantidade de coletas
     } catch {
       Alert.alert("Erro", "Não foi possível salvar");
     }

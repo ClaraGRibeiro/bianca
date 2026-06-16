@@ -1,7 +1,7 @@
 import { clearAll } from "@/utils/clearAll";
 import { exportPDF } from "@/utils/exportPdf";
 import { exportZIP } from "@/utils/exportZip";
-import { sortDate } from "@/utils/sortByDate";
+import { sortCollections } from "@/utils/sortCollections";
 import { updateMissingLocations } from "@/utils/updateMissingLocations";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,11 +20,12 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type Props = {
   navigation: NavigationProp;
 };
+
 export default function RecordsScreen({ navigation }: Props) {
   const router = useRouter();
   const [visibleItems, setVisibleItems] = useState(5);
   const [data, setData] = useState<any[]>([]);
-  const [ascending, setAscending] = useState(true);
+  const [ascending, setAscending] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -35,15 +36,11 @@ export default function RecordsScreen({ navigation }: Props) {
   const loadCollections = async () => {
     const saved = await AsyncStorage.getItem("collections");
     const collections = saved ? JSON.parse(saved) : [];
+
     const updatedCollections =
       await updateMissingLocations(collections);
-    const sorted = [...updatedCollections].sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() -
-        new Date(a.timestamp).getTime()
-    );
 
-    setData(sorted);
+    setData(sortCollections(updatedCollections, true));
     setVisibleItems(5);
   };
 
@@ -82,7 +79,12 @@ export default function RecordsScreen({ navigation }: Props) {
 
       <TouchableOpacity
         style={styles.sortLink}
-        onPress={() => sortDate(data, ascending, setAscending, setData)}
+        onPress={() => {
+          const sorted = sortCollections(data, ascending);
+
+          setData(sorted);
+          setAscending(!ascending);
+        }}
       >
         <Ionicons
           name="swap-vertical-outline"
@@ -90,7 +92,7 @@ export default function RecordsScreen({ navigation }: Props) {
           color={colors.primary}
         />
         <Text style={styles.sortText}>
-          {ascending ? "Ordenado: mais recentes" : "Ordenado: mais antigos"}
+          {ascending ? "Ordenado: mais antigos" : "Ordenado: mais recentes"}
         </Text>
       </TouchableOpacity>
       {/* LISTA */}

@@ -15,10 +15,10 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
-import { colors } from "../styles/colors";
-
 import { useFocusEffect } from "expo-router";
+import { Animated } from "react-native";
 import { RootStackParamList } from "../routes/types";
+import { colors } from "../styles/colors";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -27,6 +27,9 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
+  const [lastCollections, setLastCollections] = useState(0);
+  const [highlight, setHighlight] = useState(false);
+  const scaleAnim = useState(new Animated.Value(1))[0];
   const [savedName, setSavedName] = useState<string | null>(null);
   const [savedPreference, setSavedPreference] = useState<string | null>(null);
   const [gps, setGps] = useState(false);
@@ -46,8 +49,31 @@ export default function HomeScreen({ navigation }: Props) {
   }, []);
   const collectionsQtd = async () => {
     const collection = await AsyncStorage.getItem("collections");
-    setcollections(collection ? JSON.parse(collection).length : 0);
-  }
+    const total = collection ? JSON.parse(collection).length : 0;
+
+    if (total > collections) {
+      setHighlight(true);
+
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      setTimeout(() => {
+        setHighlight(false);
+      }, 1500);
+    }
+
+    setcollections(total);
+  };
   useFocusEffect(
     useCallback(() => {
       loadProfile();
@@ -188,8 +214,23 @@ export default function HomeScreen({ navigation }: Props) {
         >
           <Ionicons name="documents-outline" size={42} color={colors.primary} />
 
-          <Text style={styles.cardTitle}>Coletas {collections > 0 ? `(${collections})` : ""}</Text>
-          {/* não atualiza o valor */}
+          <Animated.Text
+            style={[
+              styles.cardTitle,
+            ]}
+          >
+            Coletas{" "}
+            {collections > 0 && (
+              <Text
+                style={{
+                  color: highlight ? "#16a34a" : colors.dark,
+                  fontSize: highlight ? 22 : 20,
+                }}
+              >
+                ({collections})
+              </Text>
+            )}
+          </Animated.Text>
 
           <Text style={styles.cardText}>
             Visualizar registros salvos offline.

@@ -2,42 +2,42 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import {
-    Alert
+  Alert
 } from "react-native";
 
 const uriToBase64 = async (uri: string) => {
-    const response = await fetch(uri);
-    const blob = await response.blob();
+  const response = await fetch(uri);
+  const blob = await response.blob();
 
-    return await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-    });
+  return await new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
 };
 
 export
-    const exportPDF = async (data: any) => {
-        try {
-            if (data.length === 0) {
-                Alert.alert("Aviso", "Não há dados para gerar relatório");
-                return;
-            }
+  const exportPDF = async (data: any) => {
+    try {
+      if (data.length === 0) {
+        Alert.alert("Aviso", "Não há dados para gerar relatório");
+        return;
+      }
 
-            const dataWithImages = await Promise.all(
-                data.map(async (item: { foto: string; }) => ({
-                    ...item,
-                    fotoBase64: item.foto ? await uriToBase64(item.foto) : null,
-                }))
-            );
+      const dataWithImages = await Promise.all(
+        data.map(async (item: { foto: string; }) => ({
+          ...item,
+          fotoBase64: item.foto ? await uriToBase64(item.foto) : null,
+        }))
+      );
 
-            const now = new Date();
+      const now = new Date();
 
-            const datePdf =
-                `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}` +
-                `_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}-${String(now.getSeconds()).padStart(2, "0")}`;
+      const datePdf =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}` +
+        `_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}-${String(now.getSeconds()).padStart(2, "0")}`;
 
-            const html = `
+      const html = `
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -171,8 +171,8 @@ export
 
   <main>
     ${dataWithImages
-                    .map(
-                        (item) => `
+          .map(
+            (item) => `
         <section class="record">
 
           <div class="grid">
@@ -187,40 +187,40 @@ export
               <p><strong>Latitude:</strong> ${item.latitude ?? "-"}</p>
               <p><strong>Longitude:</strong> ${item.longitude ?? "-"}</p>
 ${Object.entries(item.respostas || {})
-                                .map(([key, value]) => {
-                                    const formattedValue =
-                                        value === null || value === undefined || value === ""
-                                            ? "Não informado"
-                                            : Array.isArray(value)
-                                                ? value.join(", ")
-                                                : String(value);
+                .map(([key, value]) => {
+                  const formattedValue =
+                    value === null || value === undefined || value === ""
+                      ? "Não informado"
+                      : Array.isArray(value)
+                        ? value.join(", ")
+                        : String(value);
 
-                                    return `
+                  return `
       <p>
         <strong>${key.replace(/_/g, " ")}:</strong> ${formattedValue}
       </p>
     `;
-                                })
-                                .join("")}       
+                })
+                .join("")}       
                    </div>
 
             <div>
               ${item.fotoBase64
-                                ? `
+                ? `
                   <div class="photo-wrapper">
                     <img class="photo" src="${item.fotoBase64}" />
                   </div>
                   `
-                                : `<div class="muted">Sem foto</div>`
-                            }
+                : `<div class="muted">Sem foto</div>`
+              }
             </div>
 
           </div>
 
         </section>
       `
-                    )
-                    .join("")}
+          )
+          .join("")}
   </main>
 
   <footer>
@@ -238,33 +238,117 @@ ${Object.entries(item.respostas || {})
 </body>
 </html>
 `;
-            const { uri } = await Print.printToFileAsync({
-                html,
-            });
+      const { uri } = await Print.printToFileAsync({
+        html,
+      });
 
-            const pdfPath =
-                FileSystem.cacheDirectory +
-                `relatorio-bianca-${datePdf
+      const pdfPath =
+        FileSystem.cacheDirectory +
+        `relatorio-bianca-${datePdf
+          .replace(/[:.]/g, "-")}.pdf`;
+
+      await FileSystem.copyAsync({
+        from: uri,
+        to: pdfPath,
+      });
+
+      Alert.alert(
+        "Relatório BIANCA",
+        "O que deseja fazer?",
+        [
+          {
+            text: "Cancelar",
+            style: "cancel",
+          },
+          {
+            text: "Compartilhar",
+            onPress: async () => {
+              try {
+                const available =
+                  await Sharing.isAvailableAsync();
+
+                if (!available) {
+                  Alert.alert(
+                    "Erro",
+                    "Compartilhamento não disponível"
+                  );
+                  return;
+                }
+
+                await Sharing.shareAsync(pdfPath, {
+                  mimeType: "application/pdf",
+                  dialogTitle: "Relatório BIANCA",
+                });
+              } catch (error) {
+                console.error(error);
+                Alert.alert(
+                  "Erro",
+                  "Não foi possível compartilhar o PDF."
+                );
+              }
+            },
+          },
+          {
+            text: "Baixar",
+            onPress: async () => {
+              try {
+                const permissions =
+                  await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+                if (!permissions.granted) {
+                  Alert.alert(
+                    "Aviso",
+                    "Permissão para salvar o arquivo foi negada."
+                  );
+                  return;
+                }
+
+                const nomeArquivo =
+                  `relatorio-bianca-${datePdf
                     .replace(/[:.]/g, "-")}.pdf`;
 
-            await FileSystem.copyAsync({
-                from: uri,
-                to: pdfPath,
-            });
+                const fileUri =
+                  await FileSystem.StorageAccessFramework.createFileAsync(
+                    permissions.directoryUri,
+                    nomeArquivo.replace(".pdf", ""),
+                    "application/pdf"
+                  );
 
-            const available = await Sharing.isAvailableAsync();
+                const pdfContent =
+                  await FileSystem.readAsStringAsync(
+                    pdfPath,
+                    {
+                      encoding:
+                        FileSystem.EncodingType.Base64,
+                    }
+                  );
 
-            if (!available) {
-                Alert.alert("Erro", "Compartilhamento não disponível");
-                return;
-            }
+                await FileSystem.StorageAccessFramework.writeAsStringAsync(
+                  fileUri,
+                  pdfContent,
+                  {
+                    encoding:
+                      FileSystem.EncodingType.Base64,
+                  }
+                );
 
-            await Sharing.shareAsync(pdfPath, {
-                mimeType: "application/pdf",
-                dialogTitle: "Relatório BIANCA",
-            });
-        } catch (error) {
-            console.error(error);
-            Alert.alert("Erro", JSON.stringify(error));
-        }
-    };
+                Alert.alert(
+                  "Sucesso",
+                  "PDF salvo com sucesso."
+                );
+              } catch (error) {
+                console.error(error);
+                Alert.alert(
+                  "Erro",
+                  "Não foi possível salvar o PDF."
+                );
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro", JSON.stringify(error));
+    }
+  };

@@ -29,6 +29,7 @@
     "expo-image-picker": "~55.0.20",
     "expo-linking": "~55.0.15",
     "expo-location": "~55.1.10",
+    "expo-media-library": "~55.0.17",
     "expo-print": "~55.0.15",
     "expo-router": "~55.0.15",
     "expo-sharing": "~55.0.20",

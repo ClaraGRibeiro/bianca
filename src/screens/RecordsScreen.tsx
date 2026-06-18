@@ -59,7 +59,7 @@ export default function RecordsScreen({ navigation }: Props) {
       </View>
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={() => exportZIP(data)}>
-          <Ionicons name="download-outline" size={20} color="#fff" />
+          <Ionicons name="folder-outline" size={20} color="#fff" />
           <Text style={styles.actionText}>ZIP</Text>
         </TouchableOpacity>
 

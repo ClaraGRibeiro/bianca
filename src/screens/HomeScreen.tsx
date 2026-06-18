@@ -27,13 +27,13 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
-  const [lastCollections, setLastCollections] = useState(0);
   const [highlight, setHighlight] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [savedName, setSavedName] = useState<string | null>(null);
   const [savedPreference, setSavedPreference] = useState<string | null>(null);
   const [gps, setGps] = useState(false);
   const [camera, setCamera] = useState(false);
+  const [media, setMedia] = useState(false);
   const [collections, setcollections] = useState(0);
   useEffect(() => {
     const subscription = AppState.addEventListener(
@@ -82,17 +82,24 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     checkLocationPermission();
     checkCameraPermission();
+    checkMediaPermission();
   }, []);
+  const checkLocationPermission = async () => {
+    const { granted } =
+      await Location.getForegroundPermissionsAsync();
+    setGps(granted);
+  };
   const checkCameraPermission = async () => {
     const { granted } =
       await ImagePicker.getCameraPermissionsAsync();
 
     setCamera(granted);
   };
-  const checkLocationPermission = async () => {
+  const checkMediaPermission = async () => {
     const { granted } =
-      await Location.getForegroundPermissionsAsync();
-    setGps(granted);
+      await ImagePicker.getMediaLibraryPermissionsAsync();
+
+    setMedia(granted);
   };
   const loadProfile = async () => {
     const storedName = await AsyncStorage.getItem("user_name");
@@ -117,9 +124,9 @@ export default function HomeScreen({ navigation }: Props) {
         <TouchableOpacity
           style={[
             styles.card,
-            (!savedName || !savedPreference || !gps || !camera) && styles.cardDisabled,
+            (!savedName || !savedPreference || !gps || !camera || !media) && styles.cardDisabled,
           ]}
-          disabled={!savedName || !savedPreference || !gps || !camera}
+          disabled={!savedName || !savedPreference || !gps || !camera || !media}
           onPress={() => navigation.navigate("Register")}
         >
           <Ionicons
@@ -137,9 +144,12 @@ export default function HomeScreen({ navigation }: Props) {
               !camera ?
                 <Text style={styles.cardText}>Para realizar uma coleta, permita o uso da câmera.</Text>
                 :
-                <Text style={styles.cardText}>
-                  Registrar uma nova coleta de campo.
-                </Text>
+                !media ?
+                  <Text style={styles.cardText}>Para realizar uma coleta, permita o uso da mídia.</Text>
+                  :
+                  <Text style={styles.cardText}>
+                    Registrar uma nova coleta de campo.
+                  </Text>
           }
         </TouchableOpacity>
         {!gps &&
@@ -204,6 +214,39 @@ export default function HomeScreen({ navigation }: Props) {
 
             <Text style={styles.cardText}>
               Necessário para capturar imagens durante as coletas.
+            </Text>
+          </TouchableOpacity>
+        }
+        {!media &&
+          <TouchableOpacity
+            style={styles.card}
+            onPress={async () => {
+              const permission =
+                await ImagePicker.getMediaLibraryPermissionsAsync();
+
+              if (!permission.granted) {
+                Linking.openSettings();
+                return;
+              }
+
+              const { granted } =
+                await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+              setMedia(granted);
+            }}
+          >
+            <Ionicons
+              name="folder-outline"
+              size={42}
+              color={colors.primary}
+            />
+
+            <Text style={styles.cardTitle}>
+              Acesso à mídia negado
+            </Text>
+
+            <Text style={styles.cardText}>
+              Necessário para exportar dados das coletas.
             </Text>
           </TouchableOpacity>
         }

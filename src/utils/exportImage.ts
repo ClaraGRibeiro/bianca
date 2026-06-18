@@ -12,15 +12,16 @@ const photoPathName = (
   return `${String(latitude ?? "0")
     .replace(".", "")
     .replace("-", "_")}_${String(longitude ?? "0")
-    .replace(".", "")
-    .replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`
-    .replace(/\//g, "")
-    .replace(/:/g, "")
-    .replace(/\s/g, "")}`;
+      .replace(".", "")
+      .replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`
+        .replace(/\//g, "")
+        .replace(/:/g, "")
+        .replace(/\s/g, "")}`;
 };
 
-export const downloadImage = async (item: any) => {
+export const downloadImage = async (item: any, setLoadingImage: React.Dispatch<React.SetStateAction<boolean>>) => {
   try {
+    setLoadingImage(true)
     if (!item.foto) {
       Alert.alert("Aviso", "Esta coleta não possui imagem.");
       return;
@@ -140,5 +141,7 @@ export const downloadImage = async (item: any) => {
   } catch (error) {
     console.error(error);
     Alert.alert("Erro", "Não foi possível processar a imagem.");
+  } finally {
+    setLoadingImage(false);
   }
 };

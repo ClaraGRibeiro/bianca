@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList, Image, StyleSheet, Text,
   TouchableOpacity,
   View
@@ -26,7 +27,8 @@ export default function RecordsScreen({ navigation }: Props) {
   const [visibleItems, setVisibleItems] = useState(5);
   const [data, setData] = useState<any[]>([]);
   const [ascending, setAscending] = useState(false);
-
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [loadingZip, setLoadingZip] = useState(false);
   useFocusEffect(
     useCallback(() => {
       loadCollections();
@@ -58,14 +60,48 @@ export default function RecordsScreen({ navigation }: Props) {
         <Text style={styles.title}>Coletas realizadas {data.length > 0 ? `(${data.length})` : ""}</Text>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => exportZIP(data)}>
-          <Ionicons name="folder-outline" size={20} color="#fff" />
-          <Text style={styles.actionText}>ZIP</Text>
+         <TouchableOpacity
+          style={[
+            styles.actionButton,
+            loadingZip && { opacity: 0.7 }
+          ]}
+          disabled={loadingZip}
+          onPress={() => exportZIP(data, setLoadingZip)}
+        >
+          {loadingZip ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons
+                name="folder-outline"
+                size={20}
+                color="#fff"
+              />
+              <Text style={styles.actionText}>ZIP</Text>
+            </>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton} onPress={() => exportPDF(data)}>
-          <Ionicons name="document-text-outline" size={20} color="#fff" />
-          <Text style={styles.actionText}>PDF</Text>
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
+            loadingPdf && { opacity: 0.7 }
+          ]}
+          disabled={loadingPdf}
+          onPress={() => exportPDF(data, setLoadingPdf)}
+        >
+          {loadingPdf ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons
+                name="document-text-outline"
+                size={20}
+                color="#fff"
+              />
+              <Text style={styles.actionText}>PDF</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity

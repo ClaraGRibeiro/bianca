@@ -12,15 +12,16 @@ const photoPathName = (
   return `${String(latitude ?? "0")
     .replace(".", "")
     .replace("-", "_")}_${String(longitude ?? "0")
-    .replace(".", "")
-    .replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`
-    .replace(/\//g, "")
-    .replace(/:/g, "")
-    .replace(/\s/g, "")}`;
+      .replace(".", "")
+      .replace("-", "_")}_${`${String(date ?? "0")}_${hour ?? "0"}`
+        .replace(/\//g, "")
+        .replace(/:/g, "")
+        .replace(/\s/g, "")}`;
 };
 
-export const exportZIP = async (data: any[]) => {
+export const exportZIP = async (data: any[], setLoadingZip: React.Dispatch<React.SetStateAction<boolean>>) => {
   try {
+    setLoadingZip(true)
     const fotos = data.filter((item) => item.foto);
 
     if (fotos.length === 0) {
@@ -238,5 +239,7 @@ export const exportZIP = async (data: any[]) => {
         ? error.message
         : "Falha ao gerar ZIP"
     );
+  } finally {
+    setLoadingZip(false);
   }
 };

@@ -17,8 +17,9 @@ const uriToBase64 = async (uri: string) => {
 };
 
 export
-  const exportPDF = async (data: any) => {
+  const exportPDF = async (data: any, setLoadingPdf: React.Dispatch<React.SetStateAction<boolean>>) => {
     try {
+      setLoadingPdf(true)
       if (data.length === 0) {
         Alert.alert("Aviso", "Não há dados para gerar relatório");
         return;
@@ -350,5 +351,7 @@ ${Object.entries(item.respostas || {})
     } catch (error) {
       console.error(error);
       Alert.alert("Erro", JSON.stringify(error));
+    } finally {
+      setLoadingPdf(false);
     }
   };

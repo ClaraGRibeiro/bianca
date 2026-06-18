@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RouteProp } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Alert,
   Image,
@@ -23,6 +23,7 @@ type Props = {
 export default function RecordDetailsScreen({ route }: Props) {
   const { item } = route.params;
   const router = useRouter();
+  const [loadingImage, setLoadingImage] = useState(false);
 
   const pesquisaAtual = pesquisas.find(
     (p) => p.research === item.tipoColeta
@@ -149,7 +150,7 @@ export default function RecordDetailsScreen({ route }: Props) {
 
         <TouchableOpacity
           style={styles.downloadButton}
-          onPress={() => downloadImage(item)}
+          onPress={() => downloadImage(item, setLoadingImage)}
         >
           <Ionicons
             name="download-outline"

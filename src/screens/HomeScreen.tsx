@@ -41,12 +41,17 @@ export default function HomeScreen({ navigation }: Props) {
       async (state) => {
         if (state === "active") {
           await loadProfile();
+
+          await checkLocationPermission();
+          await checkCameraPermission();
+          await checkMediaPermission();
         }
       }
     );
 
     return () => subscription.remove();
   }, []);
+
   const collectionsQtd = async () => {
     const collection = await AsyncStorage.getItem("collections");
     const total = collection ? JSON.parse(collection).length : 0;
@@ -83,6 +88,10 @@ export default function HomeScreen({ navigation }: Props) {
     useCallback(() => {
       loadProfile();
       collectionsQtd()
+
+      checkLocationPermission();
+      checkCameraPermission();
+      checkMediaPermission();
     }, []));
 
   useEffect(() => {

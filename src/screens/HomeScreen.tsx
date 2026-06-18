@@ -1,7 +1,12 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   AppState,
   Linking,
   ScrollView,
@@ -10,13 +15,6 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-
-import { Ionicons } from "@expo/vector-icons";
-
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import * as ImagePicker from "expo-image-picker";
-import { useFocusEffect } from "expo-router";
-import { Animated } from "react-native";
 import { RootStackParamList } from "../routes/types";
 import { colors } from "../styles/colors";
 
@@ -35,6 +33,8 @@ export default function HomeScreen({ navigation }: Props) {
   const [camera, setCamera] = useState(false);
   const [media, setMedia] = useState(false);
   const [collections, setcollections] = useState(0);
+  const previousCollections = useRef<number | null>(null);
+
   useEffect(() => {
     const subscription = AppState.addEventListener(
       "change",
@@ -51,7 +51,10 @@ export default function HomeScreen({ navigation }: Props) {
     const collection = await AsyncStorage.getItem("collections");
     const total = collection ? JSON.parse(collection).length : 0;
 
-    if (total > collections) {
+    if (
+      previousCollections.current !== null &&
+      total > previousCollections.current
+    ) {
       setHighlight(true);
 
       Animated.sequence([
@@ -72,18 +75,22 @@ export default function HomeScreen({ navigation }: Props) {
       }, 1500);
     }
 
+    previousCollections.current = total;
     setcollections(total);
   };
+
   useFocusEffect(
     useCallback(() => {
       loadProfile();
       collectionsQtd()
     }, []));
+
   useEffect(() => {
     checkLocationPermission();
     checkCameraPermission();
     checkMediaPermission();
   }, []);
+
   const checkLocationPermission = async () => {
     const { granted } =
       await Location.getForegroundPermissionsAsync();
@@ -255,25 +262,44 @@ export default function HomeScreen({ navigation }: Props) {
           style={styles.card}
           onPress={() => navigation.navigate("Records")}
         >
-          <Ionicons name="documents-outline" size={42} color={colors.primary} />
-
-          <Animated.Text
-            style={[
-              styles.cardTitle,
-            ]}
-          >
-            Coletas{" "}
-            {collections > 0 && (
+          {collections > 0 && (
+            <Animated.View
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                backgroundColor: highlight ? colors.primary : colors.white,
+                borderColor: highlight ? colors.white : colors.medium,
+                borderWidth: 2,
+                minWidth: highlight ? 36 : 32,
+                height: highlight ? 36 : 32,
+                borderRadius: 16,
+                justifyContent: "center",
+                alignItems: "center",
+                transform: [{ scale: scaleAnim }],
+              }}
+            >
               <Text
                 style={{
-                  color: highlight ? "#16a34a" : colors.dark,
-                  fontSize: highlight ? 22 : 20,
+                  color: highlight ? colors.white : colors.medium,
+                  fontWeight: "bold",
+                  fontSize: highlight ? 18 : 14,
                 }}
               >
-                ({collections})
+                {collections}
               </Text>
-            )}
-          </Animated.Text>
+            </Animated.View>
+          )}
+
+          <Ionicons
+            name="documents-outline"
+            size={42}
+            color={colors.primary}
+          />
+
+          <Text style={styles.cardTitle}>
+            Coletas
+          </Text>
 
           <Text style={styles.cardText}>
             Visualizar registros salvos offline.

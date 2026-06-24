@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
+import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Alert, Image, KeyboardAvoidingView, Platform, ScrollView,
+  Alert, BackHandler, Image, KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -159,6 +160,52 @@ export default function RegisterScreen() {
 
   const router = useRouter();
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const hasChanges = () => {
+    const hasFormData = Object.values(formData).some(
+      (value) => value?.toString().trim() !== ""
+    );
+
+    return hasFormData || photoUri !== "";
+  };
+
+  const handleBack = () => {
+    if (!hasChanges()) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      "Descartar coleta?",
+      "Existem dados preenchidos que serão perdidos. Deseja realmente sair?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: () => router.back(),
+        },
+      ]
+    );
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        handleBack();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [formData, photoUri])
+  );
 
   return (
     <KeyboardAvoidingView
@@ -172,7 +219,7 @@ export default function RegisterScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={handleBack}
           >
             <Ionicons name="arrow-back" size={26} color={colors.white} />
           </TouchableOpacity>

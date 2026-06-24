@@ -1,20 +1,224 @@
 [
   {
     "id": 1,
-    "research": "Condição da Via",
+    "research": "Caracterização da Via",
     "fields": [
       {
-        "id": "condicao_via",
-        "label": "Condição da Via",
+        "id": "classificacao",
+        "label": "Classificação",
         "type": "select",
-        "options": ["Bom", "Neutro", "Ruim"],
-        "placeholder": "Selecione a condição"
+        "options": [
+          "Arterial",
+          "Coletora",
+          "Local"
+        ]
       },
       {
-        "id": "observacoes",
-        "label": "Observações",
-        "type": "textarea",
-        "placeholder": "Descreva em detalhes..."
+        "id": "largura_via",
+        "label": "Largura da Via (m)",
+        "type": "number",
+        "placeholder": "Informe a largura em metros"
+      },
+      {
+        "id": "tipo_pavimento",
+        "label": "Tipo de Pavimento",
+        "type": "select",
+        "options": [
+          "Asfalto",
+          "Asfalto/Terra",
+          "Asfalto, Intertravado",
+          "Asfalto, Intertravado, Terra",
+          "Asfalto, Terra",
+          "Terra",
+          "Intertravado"
+        ]
+      },
+      {
+        "id": "condicao_pavimento",
+        "label": "Condição do Pavimento",
+        "type": "select",
+        "options": [
+          "Excelente",
+          "Bom",
+          "Regular",
+          "Ruim"
+        ]
+      },
+      {
+        "id": "faixas_sentido",
+        "label": "Quantidade de Faixas por Sentido",
+        "type": "number"
+      },
+      {
+        "id": "condicao_sinalizacao_horizontal",
+        "label": "Condição da Sinalização Horizontal",
+        "type": "select",
+        "options": [
+          "Excelente",
+          "Bom",
+          "Regular",
+          "Ruim",
+          "Não se aplica"
+        ]
+      },
+      {
+        "id": "condicao_sinalizacao_vertical",
+        "label": "Condição da Sinalização Vertical",
+        "type": "select",
+        "options": [
+          "Excelente",
+          "Bom",
+          "Regular",
+          "Ruim",
+          "Não se aplica"
+        ]
+      },
+      {
+        "id": "faixa_pedestres",
+        "label": "Faixa de Pedestres",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "quebra_mola",
+        "label": "Ondulação Transversal (Quebra-mola)",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "radar",
+        "label": "Radar",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "semaforo",
+        "label": "Semáforo",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "condicao_calcada",
+        "label": "Condição das Calçadas",
+        "type": "select",
+        "options": [
+          "Excelente",
+          "Bom",
+          "Regular",
+          "Ruim"
+        ]
+      },
+      {
+        "id": "rampa_cadeirante",
+        "label": "Presença de Rampa para Cadeirante",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "largura_calcada",
+        "label": "Largura da Calçada (m)",
+        "type": "number"
+      },
+      {
+        "id": "piso_tatil",
+        "label": "Piso Tátil",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "acessibilidade",
+        "label": "Acessibilidade",
+        "type": "select",
+        "options": [
+          "Excelente",
+          "Bom",
+          "Regular",
+          "Ruim"
+        ]
+      },
+      {
+        "id": "ponto_onibus",
+        "label": "Ponto de Ônibus (PED)",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "abrigo_ped",
+        "label": "Abrigo para PED",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "ponto_taxi",
+        "label": "Ponto de Táxi",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "estacionamento",
+        "label": "Estacionamento",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "ciclovia",
+        "label": "Ciclovia",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "ciclofaixa",
+        "label": "Ciclofaixa",
+        "type": "radio",
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      },
+      {
+        "id": "condicao_ciclovia",
+        "label": "Condição da Ciclovia/Ciclofaixa",
+        "type": "select",
+        "options": [
+          "Excelente",
+          "Bom",
+          "Regular",
+          "Ruim",
+          "Não se aplica"
+        ]
       }
     ]
   },
@@ -32,15 +236,11 @@
   {
     "id": 3,
     "research": "Levantamento em Campo",
-    "fields": [
-      
-    ]
+    "fields": []
   },
   {
     "id": 4,
     "research": "Análise Viária",
-    "fields": [
-      
-    ]
+    "fields": []
   }
 ]

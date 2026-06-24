@@ -18,7 +18,7 @@ import { colors } from "../styles/colors";
 type Field = {
   id: string;
   label: string;
-  type: "select" | "textarea" | "number" | "text";
+  type: "select" | "textarea" | "number" | "text" | "radio";
   options?: string[];
   placeholder?: string;
 };
@@ -266,7 +266,7 @@ export default function RegisterScreen() {
                       }}
                     >
                       <Picker.Item
-                        label={field.placeholder}
+                        label={field.placeholder || "Selecione uma opção"}
                         value=""
                         color={colors.gray}
                       />
@@ -315,6 +315,38 @@ export default function RegisterScreen() {
                     }
                   />
                 )}
+
+                {field.type === "radio" && (
+                  <View style={styles.radioContainer}>
+                    {field.options?.map((option) => {
+                      const selected = formData[field.id] === option;
+
+                      return (
+                        <TouchableOpacity
+                          key={option}
+                          style={styles.radioOption}
+                          onPress={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              [field.id]: option,
+                            }))
+                          }
+                        >
+                          <View
+                            style={[
+                              styles.radioCircle,
+                              selected && styles.radioCircleSelected,
+                            ]}
+                          >
+                            {selected && <View style={styles.radioInnerCircle} />}
+                          </View>
+
+                          <Text style={styles.radioLabel}>{option}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+
+                  </View>)}
               </View>
             );
           })}
@@ -573,6 +605,44 @@ const styles = StyleSheet.create({
     borderColor: colors.gray,
     overflow: "hidden",
   },
+  radioContainer: {
+    flexDirection: "row",
+    gap: 20,
+    marginTop: 8,
+  },
+
+  radioOption: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  radioCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  radioCircleSelected: {
+    borderColor: colors.primary,
+  },
+
+  radioInnerCircle: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+  },
+
+  radioLabel: {
+    marginLeft: 8,
+    color: colors.dark,
+    fontSize: 16,
+  },
+
   sectionSubtitle: {
     color: colors.medium,
     marginBottom: 18,
